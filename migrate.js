@@ -20,7 +20,6 @@ var thirdCommand = (process.argv[5] || "").toLowerCase();
 var firebaseURL = CONFIG.serverURL,
     firebaseSecret = CONFIG.firebaseSecret,
     now = new Date(),
-//serverIpURL = CONFIG.serverIpURL,
     port = CONFIG.port,
     migrationName,
     migration;
@@ -28,7 +27,8 @@ var COMMANDS = {
   "run": [],
   "test": [],
   "rollback": [],
-  "backup": ["create", "load"],
+  // "backup": ["create", "load"], // uncomment if want to use backup load, DANGEROUS!
+  "backup": ["create"],
   "list": ["migrations", "backups"]
 };
 
@@ -151,7 +151,7 @@ function processDBCommand(command, secondCommand, migrationName, migration) {
     case "backup":
       switch(secondCommand) {
         case "create":
-          createBackup('create_backup_'+getDateString(now)+'-'+getTimeString(now), function(backupName) {
+          createBackup('homemade_dump-'+getDateString(now)+'_'+getTimeString(now), function(backupName) {
             console.log("Backup Create Success #", backupName);
             process.exit();
           });
@@ -215,7 +215,7 @@ function addBackupHistory(backupName, callback) {
     name: backupName,
     timestamp: now.getTime()
   });
-  console.log(JSON.stringify(backupHistory));
+
   createJSONFile('./backup_history.json', backupHistory, function() {
     console.log('Backup History added ' + backupName);
     callback && callback();
@@ -228,8 +228,9 @@ function createBackup(backupName, callback) {
 
   rootRef.once('value', function(snapshot) {
     createJSONFile('./backups/'+backupName+'.json', snapshot.val(), function() {
-      addBackupHistory(backupName);
-      callback(backupName);
+      addBackupHistory(backupName, function() {
+        callback(backupName);
+      });
     });
   });
 }
@@ -261,15 +262,14 @@ function spacer(str) {
 
 
 function createJSONFile(path, data, callback) {
-  var f = fs.createWriteStream(path);
-
-  f.once('open', function() {
-    f.write(JSON.stringify(data, null, 4), function(err) {
-      if(!err) {
-        console.log("JSON File created #"+path);
-      }
-      callback();
-    });
+  fs.writeFile(path, JSON.stringify(data, null, 4), function(err) {
+    if(!err) {
+      console.log("JSON File created #"+path);
+    }
+    else {
+      console.log("JSON File write failed #"+path);
+    }
+    callback();
   });
 }
 
@@ -285,5 +285,5 @@ function getDateString(date) {
 
 
 function getTimeString(date) {
-  return date.toLocaleTimeString();
+  return date.toISOString().slice(11,19).split(':').join('-');
 }

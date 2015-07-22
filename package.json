@@ -1,0 +1,17 @@
+{
+  "name": "firebase_migrations",
+  "version": "0.0.0",
+  "description": "TinyOwl Homemade Firebase Migrations",
+  "main": "migrate.js",
+  "dependencies": {
+    "deep-diff": "^0.3.2",
+    "firebase": "~2.2.2",
+    "fs": "0.0.2",
+    "underscore": "~1.7.0"
+  },
+  "author": "islahul",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/Flutterbee/tiny_chef_server/issues"
+  }
+}
